@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Eternal Garden | The Silent Sanctuary</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --forest-deep: #020502;
+            --forest-glow: #0a1a0a;
+            --firefly-gold: #f3ce5e;
+            --nature-green: #2d4c2d;
+            --warm-white: #fdf6e3;
+            --msg-height: 22px; /* Ultra-dense setting */
+        }
+
+        /* Basic Reset & Typography */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: var(--forest-deep);
+            color: var(--warm-white);
+            font-family: 'Inter', 'Helvetica', sans-serif;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .majestic { font-family: 'Cinzel', serif; letter-spacing: 0.1em; }
+        .italic-script { font-family: 'Playfair Display', serif; font-style: italic; }
+
+        /* --- THE GARDEN AESTHETICS --- */
+        #garden-background {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, var(--forest-glow) 0%, var(--forest-deep) 100%);
+            z-index: -1;
+        }
+
+        .firefly {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: var(--firefly-gold);
+            border-radius: 50%;
+            filter: blur(1px);
+            box-shadow: 0 0 8px var(--firefly-gold);
+            pointer-events: none;
+            opacity: 0;
+            animation: firefly-pulse 8s infinite ease-in-out;
+        }
+
+        @keyframes firefly-pulse {
+            0%, 100% { transform: scale(0.5) translate(0, 0); opacity: 0; }
+            50% { transform: scale(1.2) translate(20px, -40px); opacity: 0.8; }
+        }
+
+        /* --- CHAT UI DENSITY --- */
+        .message-line {
+            min-height: var(--msg-height);
+            display: flex;
+            align-items: flex-start;
+            padding: 0 1rem;
+            transition: background 0.2s;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .message-line:hover { background: rgba(255,255,255,0.03); }
+
+        .timestamp {
+            font-size: 10px;
+            color: rgba(255,255,255,0.25);
+            width: 45px;
+            flex-shrink: 0;
+            margin-top: 3px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .sender-tag {
+            font-weight: 600;
+            color: var(--firefly-gold);
+            opacity: 0.8;
+            margin-right: 8px;
+            font-size: 11px;
+            text-transform: lowercase;
+        }
+
+        .message-content {
+            word-break: break-word;
+            color: rgba(255, 246, 227, 0.9);
+        }
+
+        /* --- VIDEO PLAYER SYNC STYLE --- */
+        .video-wrapper {
+            background: #000;
+            border-bottom: 1px solid rgba(243, 206, 94, 0.1);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .custom-seek-bar {
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            cursor: pointer;
+        }
+
+        #seek-fill {
+            height: 100%;
+            background: var(--firefly-gold);
+            width: 0%;
+        }
+
+        /* --- GLASS & BUTTONS --- */
+        .glass {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .garden-input {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--warm-white);
+            border-radius: 4px;
+            padding: 4px 12px;
+            font-size: 13px;
+        }
+
+        .garden-input:focus {
+            outline: none;
+            border-color: var(--firefly-gold);
+            background: rgba(255,255,255,0.07);
+        }
+
+        /* Hide Scrollbar for Chrome/Safari/Firefox */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Truth or Dare Styling */
+        .td-box {
+            background: rgba(243, 206, 94, 0.05);
+            border-left: 2px solid var(--firefly-gold);
+            padding: 8px;
+            margin: 4px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="garden-background"></div>
+    <div id="firefly-field"></div>
+
+    <div id="screen-auth" class="fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div class="w-full max-w-sm p-8 text-center">
+            <h1 class="majestic text-4xl mb-2 text-yellow-100/80">Eternal Garden</h1>
+            <p class="italic-script text-sm text-yellow-600/60 mb-10">Where whispers stay in the leaves.</p>
+            
+            <div class="space-y-3">
+                <input type="text" id="join-username" placeholder="name" class="w-full garden-input py-3 text-center">
+                <div class="flex gap-2">
+                    <input type="text" id="join-room" placeholder="room id" class="w-1/2 garden-input py-3 text-center">
+                    <input type="password" id="join-pass" placeholder="password" class="w-1/2 garden-input py-3 text-center">
+                </div>
+                <button id="btn-login" class="w-full py-3 bg-yellow-900/20 border border-yellow-700/30 rounded text-sm majestic uppercase tracking-widest hover:bg-yellow-800/30 transition-all">
+                    Enter the Woods
+                </button>
+            </div>
+            <p class="mt-6 text-[10px] uppercase tracking-tighter opacity-30">Encrypted • Room Based • 4 Members Max</p>
+        </div>
+    </div>
+
+    <div id="screen-app" class="hidden flex flex-col h-screen relative">
+        
+        <nav class="h-12 border-b border-white/5 flex items-center justify-between px-4 bg-black/40">
+            <div id="user-presence" class="flex gap-2 text-[1.5rem] leading-none opacity-80">
+                </div>
+            <div class="majestic text-xs tracking-[0.3em] opacity-40">Section <span id="display-room-id">...</span></div>
+            <button id="menu-btn" class="p-2 opacity-60 hover:opacity-100">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+        </nav>
+
+        <div id="video-panel" class="video-wrapper hidden overflow-hidden relative">
+            <div id="yt-frame" class="w-full aspect-video hidden"></div>
+            <video id="p2p-video" class="w-full aspect-video hidden" playsinline></video>
+            
+            <div class="custom-seek-bar" id="seek-container">
+                <div id="seek-fill"></div>
+            </div>
+        </div>
+
+        <div id="chat-scroller" class="flex-1 overflow-y-auto no-scrollbar py-4 bg-transparent">
+            </div>
+
+        <div id="input-panel" class="p-3 bg-black/60 border-t border-white/5">
+            <div id="reply-banner" class="hidden flex items-center justify-between text-[10px] text-yellow-600 mb-2 px-1">
+                <span>Replying to <span id="reply-user" class="font-bold"></span></span>
+                <button onclick="clearReply()" class="opacity-50">Cancel</button>
+            </div>
+            
+            <div class="flex items-end gap-2">
+                <div class="flex-1 relative">
+                    <textarea id="main-input" rows="1" placeholder="Type a message..." class="w-full garden-input resize-none py-2 max-h-32 overflow-y-auto"></textarea>
+                </div>
+                <button id="btn-send" class="h-9 w-9 flex items-center justify-center rounded bg-yellow-900/20 border border-yellow-700/40 text-yellow-500 hover:bg-yellow-800/40">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="side-drawer" class="fixed inset-y-0 right-0 w-72 glass translate-x-full transition-transform duration-500 z-[60] p-6">
+            <div class="flex justify-between items-center mb-10">
+                <h3 class="majestic text-sm">Garden Controls</h3>
+                <button id="close-menu" class="text-xs opacity-40">Close</button>
+            </div>
+            
+            <ul class="space-y-6 text-sm">
+                <li class="cursor-pointer hover:text-yellow-400 transition" id="action-p2p">📽 Host Local Video (P2P)</li>
+                <li class="cursor-pointer hover:text-yellow-400 transition" id="action-yt">🎵 Sync YouTube Link</li>
+                <li class="cursor-pointer hover:text-yellow-400 transition" id="action-clear">🗑 Purge Chat Logs</li>
+                <li class="cursor-pointer text-red-900/80 hover:text-red-500 transition border-t border-white/10 pt-6" id="action-logout">🚪 Exit Sanctuary</li>
+            </ul>
+            <input type="file" id="local-file-pick" class="hidden" accept="video/*">
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+        import { getDatabase, ref, push, set, onValue, remove, onDisconnect, serverTimestamp, limitToLast, query } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
+
+        // --- Firebase Core ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCqJ9pqMpjME0NgTe_PnKwigD-oKT1Lzh8",
+            authDomain: "tictactoe-office.firebaseapp.com",
+            databaseURL: "https://tictactoe-office-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "tictactoe-office",
+            storageBucket: "tictactoe-office.firebasestorage.app",
+            messagingSenderId: "147452376605",
+            appId: "1:147452376605:web:31a77c3610a99fb03778f4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // --- App State ---
+        let state = {
+            user: "",
+            room: "",
+            pass: "",
+            lastSender: null,
+            replyTo: null,
+            isHost: false
+        };
+
+        const UI = {
+            auth: document.getElementById('screen-auth'),
+            app: document.getElementById('screen-app'),
+            logs: document.getElementById('chat-scroller'),
+            input: document.getElementById('main-input'),
+            drawer: document.getElementById('side-drawer'),
+            p2p: document.getElementById('p2p-video'),
+            yt: document.getElementById('yt-frame')
+        };
+
+        // --- ENCRYPTION (WebCrypto AES-GCM) ---
+        // Helper to turn password into a key
+        async function deriveKey(password) {
+            const encoder = new TextEncoder();
+            const passwordData = encoder.encode(password);
+            const hash = await crypto.subtle.digest('SHA-256', passwordData);
+            return await crypto.subtle.importKey('raw', hash, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+        }
+
+        async function encrypt(text, password) {
+            const key = await deriveKey(password);
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const encoded = new TextEncoder().encode(text);
+            const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded);
+            return {
+                ct: btoa(String.fromCharCode(...new Uint8Array(ciphertext))),
+                iv: btoa(String.fromCharCode(...iv))
+            };
+        }
+
+        async function decrypt(data, password) {
+            try {
+                const key = await deriveKey(password);
+                const iv = new Uint8Array(atob(data.iv).split("").map(c => c.charCodeAt(0)));
+                const ct = new Uint8Array(atob(data.ct).split("").map(c => c.charCodeAt(0)));
+                const decoded = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+                return new TextDecoder().decode(decoded);
+            } catch (e) { return "🍃 [Scrambled Whispers]"; }
+        }
+
+        // --- INITIALIZATION & AUTH ---
+        document.getElementById('btn-login').onclick = async () => {
+            const u = document.getElementById('join-username').value.trim();
+            const r = document.getElementById('join-room').value.trim();
+            const p = document.getElementById('join-pass').value.trim();
+
+            if (!u || !r || !p) return alert("Garden entry requires all credentials.");
+
+            state.user = u;
+            state.room = r;
+            state.pass = p;
+
+            localStorage.setItem('garden_gate', JSON.stringify({u, r, p}));
+            enterRoom();
+        };
+
+        const enterRoom = () => {
+            UI.auth.classList.add('hidden');
+            UI.app.classList.remove('hidden');
+            document.getElementById('display-room-id').textContent = state.room;
+            
+            initPresence();
+            initListeners();
+            spawnFireflies();
+        };
+
+        // Auto-load from cache
+        const cache = localStorage.getItem('garden_gate');
+        if (cache) {
+            const data = JSON.parse(cache);
+            document.getElementById('join-username').value = data.u;
+            document.getElementById('join-room').value = data.r;
+            document.getElementById('join-pass').value = data.p;
+        }
+
+        // --- REALTIME CHAT ENGINE ---
+        const initListeners = () => {
+            const msgRef = query(ref(db, `rooms/${state.room}/msgs`), limitToLast(50));
+            
+            onValue(msgRef, async (snap) => {
+                UI.logs.innerHTML = '';
+                state.lastSender = null; // Reset grouping on reload
+                
+                const promises = [];
+                snap.forEach(child => {
+                    promises.push(renderMessage(child.val()));
+                });
+                await Promise.all(promises);
+                UI.logs.scrollTop = UI.logs.scrollHeight;
+            });
+
+            // Video Sync Listener
+            onValue(ref(db, `rooms/${state.room}/sync`), (snap) => {
+                const syncData = snap.val();
+                if (syncData) handleRemoteSync(syncData);
+            });
+        };
+
+        async function renderMessage(data) {
+            const text = await decrypt(data.payload, state.pass);
+            const time = new Date(data.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+            
+            const isMe = data.sender === state.user;
+            const showUser = state.lastSender !== data.sender;
+            state.lastSender = data.sender;
+
+            const div = document.createElement('div');
+            div.className = `message-line group ${showUser ? 'mt-3' : 'mt-0'}`;
+            
+            // Truth or Dare Logic
+            const isTD = text.toUpperCase().includes("T OR D?");
+
+            div.innerHTML = `
+                <div class="timestamp group-hover:opacity-60">[${time}]</div>
+                <div class="flex-1 flex flex-col">
+                    ${showUser ? `<span class="sender-tag">${data.sender}</span>` : ''}
+                    <div class="message-content">
+                        ${data.reply ? `<span class="text-[10px] opacity-30 italic mr-2">@${data.reply}</span>` : ''}
+                        ${text}
+                        ${isTD ? `
+                            <div class="td-box flex gap-4 mt-1">
+                                <button onclick="window.castVote('${data.sender}', 'TRUTH')" class="hover:text-yellow-400">Truth</button>
+                                <button onclick="window.castVote('${data.sender}', 'DARE')" class="hover:text-yellow-400">Dare</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            div.ondblclick = () => setReply(data.sender);
+            UI.logs.appendChild(div);
+        }
+
+        const sendMessage = async () => {
+            const val = UI.input.value.trim();
+            if (!val) return;
+
+            const encrypted = await encrypt(val, state.pass);
+            const mRef = ref(db, `rooms/${state.room}/msgs`);
+            
+            push(mRef, {
+                sender: state.user,
+                payload: encrypted,
+                ts: serverTimestamp(),
+                reply: state.replyTo
+            });
+
+            UI.input.value = '';
+            clearReply();
+        };
+
+        // --- VIDEO SYNC LOGIC ---
+        const handleRemoteSync = (data) => {
+            if (data.user === state.user) return; // Don't sync back to self
+
+            if (data.type === 'yt') {
+                showVideoPanel('yt');
+                const vidId = data.url.split('v=')[1]?.split('&')[0];
+                UI.yt.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${vidId}?autoplay=1&controls=0" frameborder="0"></iframe>`;
+            }
+        };
+
+        const showVideoPanel = (type) => {
+            document.getElementById('video-panel').classList.remove('hidden');
+            if (type === 'yt') { UI.yt.classList.remove('hidden'); UI.p2p.classList.add('hidden'); }
+            else { UI.p2p.classList.remove('hidden'); UI.yt.classList.add('hidden'); }
+        };
+
+        // --- PRESENCE & UTILS ---
+        const initPresence = () => {
+            const pRef = ref(db, `rooms/${state.room}/presence/${state.user}`);
+            const emojis = ['🌿', '🍄', '🌑', '🕯️'];
+            const myEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            
+            set(pRef, { active: true, emoji: myEmoji });
+            onDisconnect(pRef).remove();
+
+            onValue(ref(db, `rooms/${state.room}/presence`), (snap) => {
+                const container = document.getElementById('user-presence');
+                container.innerHTML = '';
+                snap.forEach(m => {
+                    const span = document.createElement('span');
+                    span.textContent = m.val().emoji;
+                    span.title = m.key;
+                    container.appendChild(span);
+                });
+            });
+        };
+
+        const spawnFireflies = () => {
+            const field = document.getElementById('firefly-field');
+            for(let i=0; i<20; i++) {
+                const f = document.createElement('div');
+                f.className = 'firefly';
+                f.style.left = Math.random() * 100 + 'vw';
+                f.style.top = Math.random() * 100 + 'vh';
+                f.style.animationDelay = Math.random() * 10 + 's';
+                field.appendChild(f);
+            }
+        };
+
+        // --- UI BINDINGS ---
+        document.getElementById('btn-send').onclick = sendMessage;
+        UI.input.onkeydown = (e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
+        
+        document.getElementById('menu-btn').onclick = () => UI.drawer.style.transform = 'translateX(0)';
+        document.getElementById('close-menu').onclick = () => UI.drawer.style.transform = 'translateX(100%)';
+
+        document.getElementById('action-logout').onclick = () => {
+            localStorage.removeItem('garden_gate');
+            location.reload();
+        };
+
+        document.getElementById('action-yt').onclick = () => {
+            const url = prompt("Paste YouTube URL:");
+            if (url) set(ref(db, `rooms/${state.room}/sync`), { type: 'yt', url, user: state.user, ts: Date.now() });
+        };
+
+        document.getElementById('action-clear').onclick = () => {
+            if (confirm("Burn all messages in this room?")) remove(ref(db, `rooms/${state.room}/msgs`));
+        };
+
+        window.setReply = (user) => {
+            state.replyTo = user;
+            document.getElementById('reply-banner').classList.remove('hidden');
+            document.getElementById('reply-user').textContent = user;
+            UI.input.focus();
+        };
+
+        window.clearReply = () => {
+            state.replyTo = null;
+            document.getElementById('reply-banner').classList.add('hidden');
+        };
+
+        window.castVote = async (target, choice) => {
+            const enc = await encrypt(`*CHOSE ${choice} FOR ${target}'S QUESTION*`, state.pass);
+            push(ref(db, `rooms/${state.room}/msgs`), {
+                sender: state.user,
+                payload: enc,
+                ts: serverTimestamp()
+            });
+        };
+
+    </script>
+</body>
+</html>
