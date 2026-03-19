@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eternal Garden | Sanctuary</title>
+    <title>Eternal Garden</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -237,7 +237,7 @@
         <footer class="p-4 glass-panel border-t border-white/5 shrink-0 z-50">
             <div class="max-w-5xl mx-auto relative">
                 
-                <div id="reply-context" class="hidden absolute -top-8 left-4 right-6 flex items-center justify-between text-[11px] text-yellow-600 bg-black/80 px-4 mr-8 my-1 py-1.5 rounded-t-md border border-white/10 border-b-0 backdrop-blur-md">
+                <div id="reply-context" class="hidden absolute -top-9 left-4 right-10 flex items-center justify-between text-[11px] text-yellow-600 bg-black/80 px-4 py-1.5 rounded-t-md border border-white/10 border-b-0 backdrop-blur-md">
                     <span>Replying to <span id="reply-target" class="font-bold"></span></span>
                     <button id="reply-clear" class="hover:text-white transition p-1">✕</button>
                 </div>
@@ -407,7 +407,7 @@
             init() {
                 // Presence
                 const pRef = ref(db, `rooms/${AppState.room}/presence/${AppState.user}`);
-                const emojis = ['🌱', '🍄', '🕯️', '🌿', '🌕', '🌑'];
+                const emojis = ['🌱', '🕯️', '🌿', '🌕', '🌑'];
                 set(pRef, { active: true, icon: emojis[Math.floor(Math.random()*emojis.length)] });
                 onDisconnect(pRef).remove();
 
