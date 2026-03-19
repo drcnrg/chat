@@ -243,7 +243,7 @@
                 </div>
                 
                 <div class="flex items-end gap-3">
-                    <textarea id="msg-input" rows="1" placeholder="Whisper into the void... (Type 'T or D?' for a game)" class="flex-1 garden-input py-3.5 px-4 resize-none max-h-32 leading-relaxed custom-scrollbar shadow-inner"></textarea>
+                    <textarea id="msg-input" rows="1" placeholder="Whisper into the void..." class="flex-1 garden-input py-3.5 px-4 resize-none max-h-32 leading-relaxed custom-scrollbar shadow-inner"></textarea>
                     
                     <button id="msg-send-btn" class="h-[52px] w-[52px] shrink-0 flex items-center justify-center bg-yellow-600/10 border border-yellow-600/30 rounded-full text-yellow-500 hover:bg-yellow-500 hover:text-black transition-all shadow-lg">
                         <svg class="w-5 h-5 translate-x-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path></svg>
@@ -503,7 +503,7 @@
                 html += `<span>${formattedText}</span>`;
 
                 // Game Logic (Truth or Dare)
-                if(text.includes("T or D?")) {
+                if(text.includes("T or D?","t or d","T or d","T or D")) {
                     html += `
                         <div class="td-module">
                             <div class="td-title">The Fates Demand</div>
