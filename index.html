@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <title>Eternal Garden</title>
+    
+    <link rel="icon" type="image/png" sizes="32x32" href="https://img.icons8.com/?size=100&id=PWMoLR7WpGdB&format=png&color=000000">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -12,16 +14,16 @@
     
     <style>
         :root {
-            --forest-bg: #020402;
-            --forest-light: #0a140a;
-            --forest-accent: #112211;
+            /* 5% solid blackish gray */
+            --forest-bg: #0d0d0d; 
+            --forest-accent: #1a1a1a;
             --firefly: #f3ce5e;
             --firefly-dim: #c9a53b;
-            --text-warm: #fdf6e3;
-            --text-dim: #a8a393;
-            --moss: #2d4c2d;
+            --text-warm: #f2ebd9;
+            --text-dim: #999999;
+            --moss: #4a4a4a; 
             --danger: #8a2e2e;
-            --line-h: 1.4;
+            --line-h: 1.2;
         }
 
         /* --- Global Reset & Typography --- */
@@ -32,9 +34,15 @@
         ::-webkit-scrollbar-thumb:hover { background: rgba(243, 206, 94, 0.4); }
         
         body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            background-color: var(--forest-bg); color: var(--text-warm);
-            font-family: 'Inter', sans-serif; overflow: hidden;
+            margin: 0; padding: 0; width: 100%; 
+            height: 100%; height: 100dvh; 
+            background-color: var(--forest-bg);
+            color: var(--text-warm);
+            font-family: 'Inter', sans-serif; 
+            overflow: hidden; 
+            position: fixed; /* Completely locks the viewport from mobile jumping */
+            top: 0; left: 0; right: 0; bottom: 0;
+            touch-action: none; /* Disables native pull-to-refresh and window scrolling */
         }
 
         .majestic { font-family: 'Cinzel', serif; letter-spacing: 0.15em; }
@@ -42,8 +50,8 @@
 
         /* --- Background Effects --- */
         #garden-canvas {
-            position: fixed; inset: 0; z-index: 1; pointer-events: none;
-            background: radial-gradient(circle at 50% 50%, var(--forest-light) 0%, var(--forest-bg) 100%);
+            position: absolute; inset: 0; z-index: 1; pointer-events: none;
+            background: var(--forest-bg); /* Uniform 5% gray, no gradients */
             overflow: hidden;
         }
         .firefly {
@@ -52,11 +60,7 @@
             box-shadow: 0 0 6px var(--firefly), 0 0 12px var(--firefly);
             animation: drift var(--d) infinite ease-in-out;
         }
-        .mist {
-            position: absolute; bottom: 0; left: 0; right: 0; height: 50vh;
-            background: linear-gradient(to top, rgba(2,4,2,0.8), transparent);
-            pointer-events: none; z-index: 2;
-        }
+        
         @keyframes drift {
             0% { transform: translate(0, 0) scale(0); opacity: 0; }
             20% { opacity: 0.8; }
@@ -65,22 +69,41 @@
         }
 
         /* --- Layout & Glassmorphism --- */
-        #app-root { display: flex; flex-direction: column; height: 100dvh; width: 100%; position: relative; z-index: 10; }
+        #app-root { 
+            display: flex; 
+            flex-direction: column; 
+            position: absolute; /* Anchors inside the fixed body */
+            inset: 0;
+            z-index: 10; 
+            overflow: hidden; 
+        }
         .glass-panel { 
-            background: rgba(2, 4, 2, 0.75); 
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
+            background: rgba(13, 13, 13, 0.75);  
         }
 
         /* --- Chat UI --- */
+        #chat-scroller {
+            touch-action: auto; /* Re-enables touch scrolling ONLY for the chat window */
+            -webkit-overflow-scrolling: touch;
+        }
         .msg-container {
-            display: flex; flex-direction: column; gap: 2px; padding: 0px 24px;
+            display: flex; flex-direction: column; gap: 4px; padding: 0px 24px;
             transition: background 0.2s; border-radius: 8px; margin: 1px 8px;
+            flex-shrink: 0; /* Prevents flexbox from squishing messages */
         }
         .msg-container:hover { background: rgba(243, 206, 94, 0.02); }
+        .msg-container.new-sender { margin-top: 20px; } 
+        
         .msg-header { display: flex; align-items: baseline; gap: 5px; margin-bottom: 2px; }
-        .msg-sender { font-size: 12px; font-weight: 600; color: var(--firefly); text-transform: capitalize; }
-        .msg-ts { font-size: 10px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
-        .msg-content { font-size: 14px; line-height: var(--line-h); color: rgba(253, 246, 227, 0.95); word-break: break-word; }
+        .msg-sender { font-size: 13px; font-weight: 600; text-transform: capitalize; }
+        .msg-ts { font-size: 10px; color: var(--text-dim); font-variant-numeric: tabular-nums; opacity: 0.6; }
+        .msg-content { 
+            font-size: 14.5px; 
+            line-height: var(--line-h); 
+            word-break: break-word;
+            margin-top: 1px;
+            margin-bottom: 2px;
+        }
         
         .sys-msg {
             text-align: center; font-size: 11px; color: var(--text-dim);
@@ -88,9 +111,9 @@
         }
 
         .reply-banner {
-            font-size: 11px; color: var(--moss); background: rgba(45, 76, 45, 0.2);
-            padding: 2px 8px; border-radius: 4px; margin-bottom: 4px; display: inline-block;
-            border-left: 2px solid var(--moss);
+            font-size: 11px; color: var(--moss); background: rgba(255, 255, 255, 0.05);
+            padding: 4px 8px; border-radius: 4px; margin-bottom: 6px; display: inline-block;
+            border-left: 2px solid var(--moss); line-height: 1.3;
         }
 
         /* --- Truth or Dare Module --- */
@@ -113,7 +136,7 @@
         /* --- Inputs & Buttons --- */
         .garden-input {
             background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-warm); border-radius: 6px; font-size: 14px; transition: all 0.3s;
+            color: var(--text-warm); border-radius: 12px; font-size: 14px; transition: all 0.3s;
         }
         .garden-input:focus { border-color: var(--firefly); background: rgba(255, 255, 255, 0.08); box-shadow: 0 0 10px rgba(243, 206, 94, 0.1); }
         
@@ -122,8 +145,9 @@
             width: 100%; background: #000; display: none; flex-direction: column;
             border-bottom: 1px solid rgba(243, 206, 94, 0.2); z-index: 40;
             box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+            flex-shrink: 0; /* Prevents the video box from collapsing */
         }
-        .aspect-16-9 { width: 100%; aspect-ratio: 16 / 9; position: relative; max-height: 40vh; background: #050505; }
+        .aspect-16-9 { width: 100%; aspect-ratio: 16 / 9; position: relative; max-height: 40vh; background: var(--forest-bg); }
         
         .media-controls {
             position: absolute; top: 0; left: 0; right: 0; padding: 12px;
@@ -153,7 +177,7 @@
         @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
 
         /* --- Loading & Misc --- */
-        .typing-indicator { font-size: 11px; color: var(--firefly-dim); font-style: italic; padding: 0 24px; height: 16px; transition: opacity 0.3s; }
+        .typing-indicator { font-size: 11px; color: var(--firefly-dim); font-style: italic; padding: 0 24px; height: 16px; transition: opacity 0.3s; flex-shrink: 0; }
         .hidden { display: none !important; }
 
         @media (max-width: 640px) {
@@ -197,7 +221,7 @@
         
         <header class="h-16 flex items-center justify-between px-6 glass-panel border-b border-white/5 shrink-0 z-50">
             <div class="flex items-center gap-4">
-                <div id="presence-list" class="flex items-center gap-2 text-xl filter drop-shadow-md">
+                <div id="presence-list" class="flex flex-wrap items-center gap-2">
                     </div>
                 <div class="h-4 w-[1px] bg-white/10 mx-2 hidden sm:block"></div>
                 <div class="flex flex-col hidden sm:flex">
@@ -242,17 +266,18 @@
                     <button id="reply-clear" class="hover:text-white transition p-1">✕</button>
                 </div>
                 
-                <div class="flex items-end gap-3">
-                    <textarea id="msg-input" rows="1" placeholder="Whisper into the void..." class="flex-1 garden-input py-3.5 px-4 resize-none max-h-32 leading-relaxed custom-scrollbar shadow-inner"></textarea>
+                <div class="flex items-end gap-3 relative">
+                    <textarea id="msg-input" rows="1" placeholder="Whisper into the void..." class="flex-1 garden-input py-3 px-4 resize-none min-h-[44px] max-h-32 leading-relaxed custom-scrollbar shadow-inner"></textarea>
                     
-                    <button id="msg-send-btn" class="h-[52px] w-[52px] shrink-0 flex items-center justify-center bg-yellow-600/10 border border-yellow-600/30 rounded-full text-yellow-500 hover:bg-yellow-500 hover:text-black transition-all shadow-lg">
-                        <svg class="w-5 h-5 translate-x-0.5 items-center" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path></svg>
+                    <button id="msg-send-btn" class="h-[44px] px-5 mb-[1px] shrink-0 flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 border border-yellow-500/30 rounded-xl text-yellow-500 hover:from-yellow-500 hover:to-orange-500 hover:text-black hover:shadow-[0_0_15px_rgba(234,179,8,0.4)] transition-all font-medium text-sm">
+                        <span>Send</span>
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path></svg>
                     </button>
                 </div>
             </div>
         </footer>
 
-        <div id="side-menu" class="fixed inset-y-0 right-0 w-80 bg-[#020402]/95 backdrop-blur-2xl translate-x-full transition-transform duration-500 z-[110] shadow-[-10px_0_30px_rgba(0,0,0,0.8)] border-l border-white/5 flex flex-col">
+        <div id="side-menu" class="fixed inset-y-0 right-0 w-80 bg-[#0d0d0d]/95 backdrop-blur-2xl translate-x-full transition-transform duration-500 z-[110] shadow-[-10px_0_30px_rgba(0,0,0,0.8)] border-l border-white/5 flex flex-col">
             <div class="p-8 flex justify-between items-center border-b border-white/5">
                 <h3 class="majestic text-sm text-yellow-500 uppercase tracking-widest">Garden Paths</h3>
                 <button id="menu-close" class="text-gray-500 hover:text-white p-2 transition">
@@ -287,9 +312,12 @@
             </nav>
 
             <div class="p-8 border-t border-white/5">
-                <button id="opt-logout" class="w-full py-3 bg-white/5 hover:bg-white/10 text-xs tracking-widest uppercase text-gray-400 hover:text-white transition rounded">
+                <button id="opt-logout" class="w-full py-3 bg-white/5 hover:bg-white/10 text-xs tracking-widest uppercase text-gray-400 hover:text-white transition rounded mb-6">
                     Leave Garden
                 </button>
+                <div class="text-center">
+                    <span class="text-[10px] text-gray-500 tracking-[0.2em] uppercase" style="text-shadow: 0 0 10px rgba(255, 105, 180, 0.3);">Made with 💗 by MAYBORG</span>
+                </div>
             </div>
             
             <input type="file" id="p2p-file-pick" class="hidden" accept="video/mp4,video/webm,video/ogg">
@@ -315,7 +343,8 @@
         const AppState = {
             user: '', room: '', pass: '',
             cryptoKey: null,
-            replyTarget: null,
+            replyTarget: null,       
+            knownUsers: new Set(),   
             peer: null, connectedPeers: new Set(),
             ytPlayer: null, ytReady: false, isHost: false,
             lastMsgSender: null,
@@ -330,11 +359,44 @@
         };
 
         // ==========================================
+        // 1.5. USER COLOR GENERATOR (Natural Palette)
+        // ==========================================
+        const getUserColor = (name) => {
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            // Hues: Yellow(~45), Green(~120), Orange(~25), Violet(~270)
+            const hues = [45, 120, 25, 270];
+            const hue = hues[Math.abs(hash) % hues.length];
+            return {
+                name: `hsl(${hue}, 70%, 60%)`,        
+                text: `hsl(${hue}, 20%, 92%)`,        
+                border: `hsla(${hue}, 70%, 60%, 0.4)`, 
+                glow: `hsla(${hue}, 70%, 60%, 0.15)`
+            };
+        };
+
+        // ==========================================
         // 2. CRYPTOGRAPHY ENGINE (AES-256-CBC)
         // ==========================================
         const CryptoSys = {
-            bufToBase64: (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))),
-            base64ToBuf: (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0)),
+            bufToBase64: (buf) => {
+                const bytes = new Uint8Array(buf);
+                let binString = '';
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binString += String.fromCharCode(bytes[i]);
+                }
+                return btoa(binString);
+            },
+            base64ToBuf: (b64) => {
+                const binString = atob(b64);
+                const bytes = new Uint8Array(binString.length);
+                for (let i = 0; i < binString.length; i++) {
+                    bytes[i] = binString.charCodeAt(i);
+                }
+                return bytes.buffer;
+            },
             
             async deriveKey(password, saltStr) {
                 const enc = new TextEncoder();
@@ -381,10 +443,12 @@
             scrollToBottom() {
                 setTimeout(() => { DOM.scroller.scrollTop = DOM.scroller.scrollHeight; }, 50);
             },
-            setReply(name) {
-                AppState.replyTarget = name;
+            setReply(msgObj) {
+                AppState.replyTarget = { sender: msgObj.sender, text: msgObj.text };
                 document.getElementById('reply-context').classList.remove('hidden');
-                document.getElementById('reply-target').textContent = name;
+                
+                const preview = msgObj.text.length > 30 ? msgObj.text.substring(0, 30) + '...' : msgObj.text;
+                document.getElementById('reply-target').innerHTML = `${msgObj.sender}: <span style="opacity:0.6; font-weight:normal">"${preview}"</span>`;
                 DOM.input.focus();
             },
             clearReply() {
@@ -402,9 +466,8 @@
         // ==========================================
         const ChatEngine = {
             init() {
-                // Presence
                 const pRef = ref(db, `rooms/${AppState.room}/presence/${AppState.user}`);
-                const emojis = ['🌱', '🕯️', '🌿', '🌕', '🌑'];
+                const emojis = ['🌕', '🌑','😇','🌷','🌺','🌾'];
                 set(pRef, { active: true, icon: emojis[Math.floor(Math.random()*emojis.length)] });
                 onDisconnect(pRef).remove();
 
@@ -412,15 +475,31 @@
                     const list = document.getElementById('presence-list');
                     list.innerHTML = '';
                     snap.forEach(s => {
-                        const span = document.createElement('span');
-                        span.textContent = s.val().icon;
-                        span.title = s.key;
-                        span.className = 'cursor-help transition-transform hover:scale-125';
-                        list.appendChild(span);
+                        AppState.knownUsers.add(s.key); 
+                        
+                        const userTheme = getUserColor(s.key);
+                        
+                        const pill = document.createElement('div');
+                        pill.className = 'flex items-center gap-1 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full';
+                        
+                        const emojiSpan = document.createElement('span');
+                        emojiSpan.className = 'text-sm drop-shadow-md';
+                        emojiSpan.textContent = s.val().icon;
+                        
+                        const nameSpan = document.createElement('span');
+                        nameSpan.textContent = s.key;
+                        nameSpan.style.color = userTheme.name;
+                        nameSpan.style.opacity = '0.75';
+                        nameSpan.style.fontSize = '11px';
+                        nameSpan.style.fontWeight = '500';
+                        nameSpan.style.letterSpacing = '0.05em';
+                        
+                        pill.appendChild(emojiSpan);
+                        pill.appendChild(nameSpan);
+                        list.appendChild(pill);
                     });
                 });
 
-                // Typing Sync
                 DOM.input.addEventListener('input', () => {
                     UI.autoResizeInput();
                     set(ref(db, `rooms/${AppState.room}/typing/${AppState.user}`), true);
@@ -441,10 +520,8 @@
                     }
                 });
 
-                // Messages (Using onChildAdded to fix re-entry bug)
                 const msgsRef = query(ref(db, `rooms/${AppState.room}/msgs`), limitToLast(50));
                 
-                // Clear initial placeholder text on first real load
                 let isFirstLoad = true;
                 
                 onChildAdded(msgsRef, async (snap) => {
@@ -453,7 +530,6 @@
                     await this.renderMessage(m);
                 });
 
-                // Listen for Truth or Dare vote updates
                 onChildChanged(msgsRef, async (snap) => {
                     const m = { id: snap.key, ...snap.val() };
                     if(m.votes) this.updateTDVotes(m.id, m.votes);
@@ -473,37 +549,75 @@
                         ts: serverTimestamp(), reply: AppState.replyTarget
                     });
                     UI.clearReply();
-                } catch(e) { UI.toast("Failed to encrypt message."); }
+                } catch(e) { UI.toast("Failed to encrypt message."); console.error(e) }
             },
 
             async renderMessage(m) {
                 const text = await CryptoSys.decrypt(m.payload);
                 const time = m.ts ? new Date(m.ts).toLocaleTimeString([], {hour12:true, hour:'numeric', minute:'2-digit'}) : 'Now';
                 
+                AppState.knownUsers.add(m.sender);
+
+                // Push Notification for "Heyy"
+                if (m.sender !== AppState.user && text.trim().toLowerCase() === 'heyy') {
+                    const msgTime = m.ts || Date.now();
+                    // Prevent notifications for old history messages loaded on startup (10 second limit)
+                    if (Date.now() - msgTime < 10000) {
+                        if ("Notification" in window && Notification.permission === "granted") {
+                            new Notification("Eternal Garden", {
+                                body: `${m.sender} says Heyy!`,
+                            });
+                        }
+                    }
+                }
+
                 const div = document.createElement('div');
                 div.className = 'msg-container';
                 div.id = `msg-${m.id}`;
                 
-                // Group messages visually
                 const isContinuous = AppState.lastMsgSender === m.sender;
                 AppState.lastMsgSender = m.sender;
 
-                let html = '';
-                if(!isContinuous) {
-                    html += `<div class="msg-header"><span class="msg-sender">${m.sender}</span><span class="msg-ts">${time}</span></div>`;
+                if (!isContinuous) {
+                    div.classList.add('new-sender');
                 }
 
-                // Format text (Links)
+                const userTheme = getUserColor(m.sender);
+
+                let html = '';
+                if(!isContinuous) {
+                    html += `<div class="msg-header"><span class="msg-sender" style="color: ${userTheme.name}; text-shadow: 0 0 8px ${userTheme.glow}">${m.sender}</span><span class="msg-ts">${time}</span></div>`;
+                }
+
                 let formattedText = text;
                 const urlRegex = /(https?:\/\/[^\s]+)/g;
                 formattedText = formattedText.replace(urlRegex, url => `<a href="${url}" target="_blank" class="text-yellow-500 underline hover:text-yellow-300">${url}</a>`);
 
-                html += `<div class="msg-content">`;
-                if(m.reply) html += `<div class="reply-banner">@${m.reply}</div><br>`;
+                AppState.knownUsers.forEach(knownUser => {
+                    if(knownUser.length >= 2) { 
+                        const safeName = knownUser.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const regex = new RegExp(`\\b(${safeName})\\b`, 'gi');
+                        
+                        formattedText = formattedText.replace(regex, (match) => {
+                            const theme = getUserColor(knownUser);
+                            return `<span style="color: ${theme.name}; text-shadow: 0 0 8px ${theme.name}, 0 0 16px ${theme.glow}; font-weight: 700;">${match}</span>`;
+                        });
+                    }
+                });
+
+                html += `<div class="msg-content" style="color: ${userTheme.text}; text-shadow: 0 0 5px ${userTheme.glow}; padding-left: 12px; margin-left: 4px; border-left: 2px solid ${userTheme.border};">`;
+                
+                if(m.reply) {
+                    const replyText = typeof m.reply === 'object' ? m.reply.text : "[Encrypted Log]";
+                    const replySender = typeof m.reply === 'object' ? m.reply.sender : m.reply;
+                    const replyPreview = replyText.length > 50 ? replyText.substring(0, 50) + '...' : replyText;
+                    
+                    html += `<div class="reply-banner">@${replySender}: <span style="opacity: 0.7; font-style: italic;">"${replyPreview}"</span></div><br>`;
+                }
+                
                 html += `<span>${formattedText}</span>`;
 
-                // Game Logic (Truth or Dare)
-                if(text.includes("T or D?","t or d","T or d","T or D")) {
+                if(text.includes("T or D?") || text.includes("t or d") || text.includes("T or d") || text.includes("T or D")) {
                     html += `
                         <div class="td-module">
                             <div class="td-title">The Fates Demand</div>
@@ -517,7 +631,8 @@
                 html += `</div>`;
                 
                 div.innerHTML = html;
-                div.ondblclick = () => UI.setReply(m.sender);
+                
+                div.ondblclick = () => UI.setReply({ sender: m.sender, text: text });
                 
                 DOM.scroller.appendChild(div);
                 if(m.votes) this.updateTDVotes(m.id, m.votes);
@@ -539,15 +654,12 @@
         // ==========================================
         const MediaEngine = {
             init() {
-                // Listen for global room media sync
                 onValue(ref(db, `rooms/${AppState.room}/mediaSync`), (snap) => {
                     const data = snap.val();
                     if(!data) return this.close();
-                    if(data.sender === AppState.user) return; // Ignore own commands
-                    
+                    if(data.sender === AppState.user) return; 
                     if(data.type === 'yt') this.handleRemoteYTSync(data);
                 });
-
                 this.setupWebRTC();
             },
 
@@ -568,7 +680,7 @@
                         playerVars: { 'autoplay': 1, 'controls': 1 },
                         events: { 'onStateChange': this.onYTStateChange.bind(this) }
                     });
-                } else {
+                } else if (typeof AppState.ytPlayer.loadVideoById === 'function') {
                     AppState.ytPlayer.loadVideoById(vidId);
                 }
 
@@ -579,7 +691,7 @@
 
             onYTStateChange(e) {
                 if(!AppState.isHost) return;
-                const state = e.data; // 1 = playing, 2 = paused
+                const state = e.data; 
                 const time = AppState.ytPlayer.getCurrentTime();
                 
                 if(state === 1 || state === 2) {
@@ -601,19 +713,30 @@
                 if(!AppState.ytPlayer) {
                     AppState.ytPlayer = new YT.Player('yt-player-frame', {
                         videoId: data.vidId,
-                        playerVars: { 'autoplay': data.state === 1 ? 1 : 0, 'controls': 0 }
+                        playerVars: { 'autoplay': data.state === 1 ? 1 : 0, 'controls': 0 },
+                        events: {
+                            'onReady': (e) => {
+                                if(data.state === 1) e.target.playVideo();
+                                if(data.time > 0) e.target.seekTo(data.time, true);
+                            }
+                        }
                     });
-                } else {
-                    const currentVid = AppState.ytPlayer.getVideoData().video_id;
-                    if(currentVid !== data.vidId) AppState.ytPlayer.loadVideoById(data.vidId);
-                    
-                    if(data.state === 1) AppState.ytPlayer.playVideo();
-                    if(data.state === 2) AppState.ytPlayer.pauseVideo();
-                    
-                    // Sync time if difference is > 2 seconds
-                    const currTime = AppState.ytPlayer.getCurrentTime();
-                    if(Math.abs(currTime - data.time) > 2) {
-                        AppState.ytPlayer.seekTo(data.time, true);
+                } else if (typeof AppState.ytPlayer.loadVideoById === 'function') {
+                    try {
+                        const vidData = AppState.ytPlayer.getVideoData ? AppState.ytPlayer.getVideoData() : null;
+                        const currentVid = vidData ? vidData.video_id : null;
+                        
+                        if(currentVid !== data.vidId) AppState.ytPlayer.loadVideoById(data.vidId);
+                        
+                        if(data.state === 1) AppState.ytPlayer.playVideo();
+                        if(data.state === 2) AppState.ytPlayer.pauseVideo();
+                        
+                        const currTime = AppState.ytPlayer.getCurrentTime();
+                        if(Math.abs(currTime - data.time) > 2) {
+                            AppState.ytPlayer.seekTo(data.time, true);
+                        }
+                    } catch (err) {
+                        console.warn("YT Sync wait", err);
                     }
                 }
             },
@@ -623,7 +746,7 @@
                 AppState.peer = new Peer(peerId);
                 
                 AppState.peer.on('call', (call) => {
-                    call.answer(); // Auto answer
+                    call.answer(); 
                     call.on('stream', (stream) => {
                         const vid = document.getElementById('p2p-local-vid');
                         document.getElementById('media-layer').style.display = 'flex';
@@ -648,10 +771,8 @@
                 vid.src = url;
                 vid.play();
 
-                // Capture stream and send to peers
                 vid.onplay = () => {
                     const stream = vid.captureStream();
-                    // Fetch presence list to know who to call
                     get(ref(db, `rooms/${AppState.room}/presence`)).then(snap => {
                         snap.forEach(s => {
                             if(s.key !== AppState.user) {
@@ -665,10 +786,9 @@
 
             close() {
                 document.getElementById('media-layer').style.display = 'none';
-                if(AppState.ytPlayer) AppState.ytPlayer.pauseVideo();
+                if(AppState.ytPlayer && typeof AppState.ytPlayer.pauseVideo === 'function') AppState.ytPlayer.pauseVideo();
                 const localVid = document.getElementById('p2p-local-vid');
                 localVid.pause(); localVid.src = ''; localVid.srcObject = null;
-                // If Host, broadcast close
                 if(AppState.isHost) remove(ref(db, `rooms/${AppState.room}/mediaSync`));
             }
         };
@@ -691,21 +811,23 @@
             }
 
             try {
-                // Initialize State and Key Before moving forward
                 AppState.user = u; AppState.room = r; AppState.pass = p;
                 AppState.cryptoKey = await CryptoSys.deriveKey(p, r);
                 
-                // Cache logic
                 localStorage.setItem('garden_auth', JSON.stringify({u, r, p}));
                 
-                // UI Switch
                 document.getElementById('auth-gate').style.opacity = '0';
+                
+                // Request Notification Permission on Entry
+                if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+                    Notification.requestPermission();
+                }
+
                 setTimeout(() => {
                     document.getElementById('auth-gate').style.display = 'none';
                     document.getElementById('app-root').classList.remove('hidden');
                     document.getElementById('room-display').textContent = r.toUpperCase();
                     
-                    // Fire Engines
                     ChatEngine.init();
                     MediaEngine.init();
                     UI.toast(`Welcome to the sanctuary, ${u}.`);
