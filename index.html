@@ -361,21 +361,18 @@
         // ==========================================
         // 1.5. USER COLOR GENERATOR (Natural Palette)
         // ==========================================
-const getUserColor = (name) => {
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    
-    // Spaced out hues: Red/Orange (15), Green (120), Blue (200), Purple (280)
+const getUserColor = () => {
+    // 4 highly distinct hues: Red/Orange (15), Green (120), Blue (200), Purple (280)
     const hues = [15, 120, 200, 280];
-    const hue = hues[Math.abs(hash) % hues.length];
+    
+    // Pick a random index from the array
+    const randomHue = hues[Math.floor(Math.random() * hues.length)];
 
     return {
-        name: `hsl(${hue}, 75%, 60%)`,        
-        text: `hsl(${hue}, 20%, 92%)`,        
-        border: `hsla(${hue}, 75%, 60%, 0.4)`, 
-        glow: `hsla(${hue}, 75%, 60%, 0.15)`
+        name: `hsl(${randomHue}, 75%, 60%)`,        
+        text: `hsl(${randomHue}, 20%, 92%)`,        
+        border: `hsla(${randomHue}, 75%, 60%, 0.4)`, 
+        glow: `hsla(${randomHue}, 75%, 60%, 0.15)`
     };
 };
 
