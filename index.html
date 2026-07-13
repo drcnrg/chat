@@ -361,20 +361,37 @@
         // ==========================================
         // 1.5. USER COLOR GENERATOR (Natural Palette)
         // ==========================================
-const getUserColor = () => {
-    // 4 highly distinct hues: Red/Orange (15), Green (120), Blue (200), Purple (280)
-    const hues = [15, 120, 200, 280];
-    
-    // Pick a random index from the array
-    const randomHue = hues[Math.floor(Math.random() * hues.length)];
+const getUserColor = (name) => {
 
-    return {
-        name: `hsl(${randomHue}, 75%, 60%)`,        
-        text: `hsl(${randomHue}, 20%, 92%)`,        
-        border: `hsla(${randomHue}, 75%, 60%, 0.4)`, 
-        glow: `hsla(${randomHue}, 75%, 60%, 0.15)`
-    };
-};
+            let hash = 0;
+
+            for (let i = 0; i < name.length; i++) {
+
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+
+            }
+
+            // Hues: Yellow(~45), Green(~120), Orange(~25), Violet(~270)
+
+            const hues = [45, 120, 25, 270];
+
+            const hue = hues[Math.abs(hash) % hues.length];
+
+            return {
+
+                name: `hsl(${hue}, 70%, 60%)`,        
+
+                text: `hsl(${hue}, 20%, 92%)`,        
+
+                border: `hsla(${hue}, 70%, 60%, 0.4)`, 
+
+                glow: `hsla(${hue}, 70%, 60%, 0.15)`
+
+            };
+
+        }; 
+
+
 
         // ==========================================
         // 2. CRYPTOGRAPHY ENGINE (AES-256-CBC)
