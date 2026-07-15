@@ -55,7 +55,7 @@
         }
         .firefly {
             position: absolute; width: 3px; height: 3px; background: var(--firefly);
-            border-radius: 50%; opacity: 0; filter: blur(1px);
+            border-radius: %; opacity: 0; filter: blur(1px);
             box-shadow: 0 0 6px var(--firefly), 0 0 12px var(--firefly);
             animation: drift var(--d) infinite ease-in-out;
         }
@@ -518,7 +518,7 @@
                     }
                 });
 
-                const msgsRef = query(ref(db, `rooms/${AppState.room}/msgs`), limitToLast(50));
+                const msgsRef = query(ref(db, `rooms/${AppState.room}/msgs`), limitToLast(300));
                 let isFirstLoad = true;
                 
                 onChildAdded(msgsRef, async (snap) => {
