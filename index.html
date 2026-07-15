@@ -14,7 +14,6 @@
     
     <style>
         :root {
-            /* 5% solid blackish gray */
             --forest-bg: #0d0d0d; 
             --forest-accent: #1a1a1a;
             --firefly: #f3ce5e;
@@ -40,9 +39,9 @@
             color: var(--text-warm);
             font-family: 'Inter', sans-serif; 
             overflow: hidden; 
-            position: fixed; /* Completely locks the viewport from mobile jumping */
+            position: fixed; 
             top: 0; left: 0; right: 0; bottom: 0;
-            touch-action: none; /* Disables native pull-to-refresh and window scrolling */
+            touch-action: none; 
         }
 
         .majestic { font-family: 'Cinzel', serif; letter-spacing: 0.15em; }
@@ -51,7 +50,7 @@
         /* --- Background Effects --- */
         #garden-canvas {
             position: absolute; inset: 0; z-index: 1; pointer-events: none;
-            background: var(--forest-bg); /* Uniform 5% gray, no gradients */
+            background: var(--forest-bg); 
             overflow: hidden;
         }
         .firefly {
@@ -72,27 +71,25 @@
         #app-root { 
             display: flex; 
             flex-direction: column; 
-            position: absolute; /* Anchors inside the fixed body */
+            position: absolute; 
             inset: 0;
             z-index: 10; 
             overflow: hidden; 
         }
-        .glass-panel { 
-            background: rgba(13, 13, 13, 0.75);  
-        }
+        .glass-panel { background: rgba(13, 13, 13, 0.75); }
 
         /* --- Chat UI --- */
         #chat-scroller {
-            touch-action: auto; /* Re-enables touch scrolling ONLY for the chat window */
+            touch-action: auto; 
             -webkit-overflow-scrolling: touch;
         }
         .msg-container {
             display: flex; flex-direction: column; gap: 4px; padding: 0px 24px;
             transition: background 0.2s; border-radius: 8px; margin: 1px 8px;
-            flex-shrink: 0; /* Prevents flexbox from squishing messages */
+            flex-shrink: 0; 
         }
         .msg-container:hover { background: rgba(243, 206, 94, 0.02); }
-        .msg-container.new-sender { margin-top: 20px; } 
+        .msg-container.new-sender { margin-top: 10px; } 
         
         .msg-header { display: flex; align-items: baseline; gap: 5px; margin-bottom: 2px; }
         .msg-sender { font-size: 13px; font-weight: 600; text-transform: capitalize; }
@@ -145,7 +142,7 @@
             width: 100%; background: #000; display: none; flex-direction: column;
             border-bottom: 1px solid rgba(243, 206, 94, 0.2); z-index: 40;
             box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-            flex-shrink: 0; /* Prevents the video box from collapsing */
+            flex-shrink: 0;
         }
         .aspect-16-9 { width: 100%; aspect-ratio: 16 / 9; position: relative; max-height: 40vh; background: var(--forest-bg); }
         
@@ -166,7 +163,7 @@
         
         .media-title { font-size: 12px; color: rgba(255,255,255,0.8); text-shadow: 0 1px 2px black; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; }
 
-        /* --- Toast Notifications --- */
+        /* --- Toast Notifications & Context Menu --- */
         #toast-container { position: fixed; top: 70px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
         .toast {
             background: var(--forest-accent); border-left: 3px solid var(--firefly); color: var(--text-warm);
@@ -182,7 +179,7 @@
 
         @media (max-width: 640px) {
             .msg-container { padding: 0px 12px; }
-            #side-menu { width: 100%; }
+            #side-menu { width: 100%; box-shadow: none;}
         }
     </style>
 </head>
@@ -191,6 +188,11 @@
     <div id="garden-canvas"><div class="mist"></div></div>
 
     <div id="toast-container"></div>
+    
+    <div id="context-menu" class="hidden fixed z-[1000] bg-[#1a1a1a]/95 border border-white/10 rounded shadow-[0_4px_20px_rgba(0,0,0,0.8)] py-1 w-32 backdrop-blur-md">
+        <button id="ctx-edit" class="w-full text-left px-4 py-2 text-[11px] uppercase tracking-wider text-yellow-500 hover:bg-white/5 transition">Edit Whisper</button>
+        <button id="ctx-delete" class="w-full text-left px-4 py-2 text-[11px] uppercase tracking-wider text-red-500 hover:bg-white/5 transition border-t border-white/5 mt-1 pt-2">Sever Echo</button>
+    </div>
 
     <div id="auth-gate" class="fixed inset-0 z-[100] flex items-center justify-center glass-panel px-6 transition-opacity duration-500">
         <div class="w-full max-w-sm space-y-10 text-center relative z-10">
@@ -221,8 +223,7 @@
         
         <header class="h-16 flex items-center justify-between px-6 glass-panel border-b border-white/5 shrink-0 z-50">
             <div class="flex items-center gap-4">
-                <div id="presence-list" class="flex flex-wrap items-center gap-2">
-                    </div>
+                <div id="presence-list" class="flex flex-wrap items-center gap-2"></div>
                 <div class="h-4 w-[1px] bg-white/10 mx-2 hidden sm:block"></div>
                 <div class="flex flex-col hidden sm:flex">
                     <span class="majestic text-[10px] text-yellow-500 tracking-[0.4em]">Eternal Garden</span>
@@ -244,7 +245,6 @@
                         Silence
                     </button>
                 </div>
-
                 <div id="yt-player-container" class="w-full h-full hidden pointer-events-none sm:pointer-events-auto">
                     <div id="yt-player-frame" class="w-full h-full"></div>
                 </div>
@@ -254,18 +254,16 @@
 
         <main id="chat-scroller" class="flex-1 overflow-y-auto py-4 flex flex-col scroll-smooth">
             <div class="sys-msg mt-auto">The garden awakens. Messages are heavily encrypted.</div>
-            </main>
+        </main>
         
         <div id="typing-status" class="typing-indicator opacity-0">Someone is whispering...</div>
 
         <footer class="p-4 glass-panel border-t border-white/5 shrink-0 z-50">
             <div class="max-w-5xl mx-auto relative">
-                
                 <div id="reply-context" class="hidden absolute -top-9 left-3 right-15 flex items-center justify-between text-[11px] text-yellow-600 bg-black/80 px-4 mr-4 py-1.5 rounded-t-md border border-white/10 border-b-0 backdrop-blur-md">
                     <span>Replying to <span id="reply-target" class="font-bold"></span></span>
                     <button id="reply-clear" class="hover:text-white transition p-1">✕</button>
                 </div>
-                
                 <div class="flex items-end gap-3 relative">
                     <textarea id="msg-input" rows="1" placeholder="Whisper into the void..." class="flex-1 garden-input py-3 px-4 resize-none min-h-[44px] max-h-32 leading-relaxed custom-scrollbar shadow-inner"></textarea>
                     
@@ -326,7 +324,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-        import { getDatabase, ref, push, set, onChildAdded, onChildChanged, onValue, remove, onDisconnect, serverTimestamp, query, limitToLast, get } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
+        import { getDatabase, ref, push, set, update, onChildAdded, onChildChanged, onChildRemoved, onValue, remove, onDisconnect, serverTimestamp, query, limitToLast, get } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
 
         // ==========================================
         // 1. ARCHITECTURE CONFIGURATION
@@ -349,53 +347,40 @@
             ytPlayer: null, ytReady: false, isHost: false,
             lastMsgSender: null,
             lastMsgTime: null,
-            typingTimeout: null
+            typingTimeout: null,
+            editingMsgId: null,
+            contextMsgId: null,      // Added for context menu
+            contextRawText: null     // Added for context menu
         };
 
         const DOM = {
             scroller: document.getElementById('chat-scroller'),
             input: document.getElementById('msg-input'),
             sendBtn: document.getElementById('msg-send-btn'),
-            typingStatus: document.getElementById('typing-status')
+            typingStatus: document.getElementById('typing-status'),
+            ctxMenu: document.getElementById('context-menu')
         };
 
         // ==========================================
-        // 1.5. USER COLOR GENERATOR (Natural Palette)
+        // 1.5. USER COLOR GENERATOR
         // ==========================================
-const getUserColor = (name) => {
-
+        const getUserColor = (name) => {
             let hash = 0;
-
             for (let i = 0; i < name.length; i++) {
-
                 hash = name.charCodeAt(i) + ((hash << 5) - hash);
-
             }
-
-            // Hues: Yellow(~45), Green(~120), Orange(~25), Violet(~270)
-
-            const hues = [45, 120, 25, 270];
-
+            const hues = [330, 120, 35, 250];
             const hue = hues[Math.abs(hash) % hues.length];
-
             return {
-
                 name: `hsl(${hue}, 70%, 60%)`,        
-
                 text: `hsl(${hue}, 20%, 92%)`,        
-
                 border: `hsla(${hue}, 70%, 60%, 0.4)`, 
-
                 glow: `hsla(${hue}, 70%, 60%, 0.15)`
-
             };
-
         }; 
 
-
-
         // ==========================================
-        // 2. CRYPTOGRAPHY ENGINE (AES-256-CBC)
+        // 2. CRYPTOGRAPHY ENGINE
         // ==========================================
         const CryptoSys = {
             bufToBase64: (buf) => {
@@ -414,7 +399,6 @@ const getUserColor = (name) => {
                 }
                 return bytes.buffer;
             },
-            
             async deriveKey(password, saltStr) {
                 const enc = new TextEncoder();
                 const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
@@ -463,7 +447,6 @@ const getUserColor = (name) => {
             setReply(msgObj) {
                 AppState.replyTarget = { sender: msgObj.sender, text: msgObj.text };
                 document.getElementById('reply-context').classList.remove('hidden');
-                
                 const preview = msgObj.text.length > 30 ? msgObj.text.substring(0, 30) + '...' : msgObj.text;
                 document.getElementById('reply-target').innerHTML = `${msgObj.sender}: <span style="opacity:0.6; font-weight:normal">"${preview}"</span>`;
                 DOM.input.focus();
@@ -493,9 +476,7 @@ const getUserColor = (name) => {
                     list.innerHTML = '';
                     snap.forEach(s => {
                         AppState.knownUsers.add(s.key); 
-                        
                         const userTheme = getUserColor(s.key);
-                        
                         const pill = document.createElement('div');
                         pill.className = 'flex items-center gap-1 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full';
                         
@@ -538,7 +519,6 @@ const getUserColor = (name) => {
                 });
 
                 const msgsRef = query(ref(db, `rooms/${AppState.room}/msgs`), limitToLast(50));
-                
                 let isFirstLoad = true;
                 
                 onChildAdded(msgsRef, async (snap) => {
@@ -550,13 +530,88 @@ const getUserColor = (name) => {
                 onChildChanged(msgsRef, async (snap) => {
                     const m = { id: snap.key, ...snap.val() };
                     if(m.votes) this.updateTDVotes(m.id, m.votes);
+
+                    const msgDiv = document.getElementById(`msg-${m.id}`);
+                    if (msgDiv && m.edited) {
+                        const newText = await CryptoSys.decrypt(m.payload);
+                        msgDiv.dataset.rawText = newText;
+                        
+                        const contentContainer = msgDiv.querySelector('.msg-content');
+                        if (contentContainer) {
+                            const textSpans = contentContainer.querySelectorAll('span');
+                            const textSpan = textSpans[textSpans.length - 1]; 
+                            
+                            if (textSpan) {
+                                let formattedText = newText;
+                                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                                formattedText = formattedText.replace(urlRegex, url => `<a href="${url}" target="_blank" class="text-yellow-500 underline hover:text-yellow-300">${url}</a>`);
+
+                                AppState.knownUsers.forEach(knownUser => {
+                                    if(knownUser.length >= 2) { 
+                                        const safeName = knownUser.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                        const regex = new RegExp(`\\b(${safeName})\\b`, 'gi');
+                                        formattedText = formattedText.replace(regex, (match) => {
+                                            const theme = getUserColor(knownUser);
+                                            return `<span style="color: ${theme.name}; text-shadow: 0 0 8px ${theme.name}, 0 0 16px ${theme.glow}; font-weight: 700;">${match}</span>`;
+                                        });
+                                    }
+                                });
+                                textSpan.innerHTML = formattedText;
+                            }
+
+                            if (!msgDiv.querySelector('.edit-tag')) {
+                                const editTag = document.createElement('span');
+                                editTag.className = 'edit-tag';
+                                editTag.style.cssText = 'font-size: 9px; opacity: 0.5; margin-left: 6px; font-style: italic;';
+                                editTag.textContent = '(edited)';
+                                contentContainer.appendChild(editTag);
+                            }
+                        }
+                    }
+                });
+
+                // Listen for removed messages so they disappear instantly
+                onChildRemoved(msgsRef, (snap) => {
+                    const msgDiv = document.getElementById(`msg-${snap.key}`);
+                    if (msgDiv) {
+                        msgDiv.remove();
+                    }
                 });
             },
 
             async send() {
                 const val = DOM.input.value.trim();
-                if(!val) return;
 
+                if (AppState.editingMsgId) {
+                    if (!val) {
+                        // Empty input triggers deletion
+                        await remove(ref(db, `rooms/${AppState.room}/msgs/${AppState.editingMsgId}`));
+                        AppState.editingMsgId = null;
+                        DOM.input.value = ''; 
+                        UI.autoResizeInput();
+                        UI.clearReply();
+                        UI.toast("Echo severed.");
+                        return;
+                    }
+                    
+                    try {
+                        const bundle = await CryptoSys.encrypt(val);
+                        await update(ref(db, `rooms/${AppState.room}/msgs/${AppState.editingMsgId}`), {
+                            payload: bundle,
+                            edited: true
+                        });
+                        AppState.editingMsgId = null;
+                        DOM.input.value = ''; 
+                        UI.autoResizeInput();
+                        DOM.input.focus();
+                        UI.clearReply();
+                        UI.toast("Whisper altered.");
+                    } catch(e) { UI.toast("Failed to encrypt edit."); }
+                    return;
+                }
+
+                if(!val) return;
+                
                 DOM.input.value = ''; UI.autoResizeInput(); DOM.input.focus();
                 
                 try {
@@ -575,15 +630,11 @@ const getUserColor = (name) => {
                 
                 AppState.knownUsers.add(m.sender);
 
-                // Push Notification for "Heyy"
                 if (m.sender !== AppState.user && text.trim().toLowerCase() === 'heyy') {
                     const msgTime = m.ts || Date.now();
-                    // Prevent notifications for old history messages loaded on startup (10 second limit)
                     if (Date.now() - msgTime < 10000) {
                         if ("Notification" in window && Notification.permission === "granted") {
-                            new Notification("Eternal Garden", {
-                                body: `${m.sender} says Heyy!`,
-                            });
+                            new Notification("Eternal Garden", { body: `${m.sender} says Heyy!` });
                         }
                     }
                 }
@@ -591,13 +642,17 @@ const getUserColor = (name) => {
                 const div = document.createElement('div');
                 div.className = 'msg-container';
                 div.id = `msg-${m.id}`;
+                div.dataset.rawText = text;
                 
-                const isContinuous = AppState.lastMsgSender === m.sender;
-                AppState.lastMsgSender = m.sender;
+                const msgTimestamp = m.ts || Date.now(); 
+                const timeDiff = AppState.lastMsgTime ? (msgTimestamp - AppState.lastMsgTime) : 0;
+                const isTimeGap = timeDiff > 300000; 
+                const isContinuous = (AppState.lastMsgSender === m.sender) && !isTimeGap;
 
-                if (!isContinuous) {
-                    div.classList.add('new-sender');
-                }
+                AppState.lastMsgSender = m.sender;
+                AppState.lastMsgTime = msgTimestamp;
+
+                if (!isContinuous) { div.classList.add('new-sender'); }
 
                 const userTheme = getUserColor(m.sender);
 
@@ -629,12 +684,16 @@ const getUserColor = (name) => {
                     const replySender = typeof m.reply === 'object' ? m.reply.sender : m.reply;
                     const replyPreview = replyText.length > 50 ? replyText.substring(0, 50) + '...' : replyText;
                     
-                    html += `<div class="reply-banner">@${replySender}: <span style="opacity: 0.7; font-style: italic;">"${replyPreview}"</span></div><br>`;
+                    html += `<div class="reply-banner"><span style="color: #5d5757d9">@${replySender}:</span> <span style="opacity: 0.7; font-style: italic;color : #564559">"${replyPreview}"</span></div><br>`;
                 }
                 
                 html += `<span>${formattedText}</span>`;
+                
+                if (m.edited) {
+                    html += `<span class="edit-tag" style="font-size: 9px; opacity: 0.5; margin-left: 6px; font-style: italic;">(edited)</span>`;
+                }
 
-                if(text.includes("T or D?") || text.includes("t or d") || text.includes("T or d") || text.includes("T or D")) {
+                if(text.includes("T or D?") || text.includes("t or d") || text.includes("T or d") || text.includes("T or D")|| text.includes("t or d?")) {
                     html += `
                         <div class="td-module">
                             <div class="td-title">The Fates Demand</div>
@@ -650,6 +709,42 @@ const getUserColor = (name) => {
                 div.innerHTML = html;
                 
                 div.ondblclick = () => UI.setReply({ sender: m.sender, text: text });
+                
+                // --- LONG PRESS TO EDIT ---
+                let pressTimer;
+                const startPress = (e) => {
+                    if (m.sender !== AppState.user) return; 
+                    pressTimer = setTimeout(() => {
+                        AppState.editingMsgId = m.id;
+                        DOM.input.value = div.dataset.rawText || text;
+                        UI.autoResizeInput();
+                        DOM.input.focus();
+                        UI.toast("Editing...");
+                    }, 600); 
+                };
+                const cancelPress = () => clearTimeout(pressTimer);
+
+                div.addEventListener('mousedown', startPress);
+                div.addEventListener('touchstart', startPress, { passive: true });
+                div.addEventListener('mouseup', cancelPress);
+                div.addEventListener('mouseleave', cancelPress);
+                div.addEventListener('touchend', cancelPress);
+                
+                // --- RIGHT CLICK CONTEXT MENU ---
+                div.addEventListener('contextmenu', (e) => {
+                    // Only show menu for own messages
+                    if (m.sender !== AppState.user) return;
+                    
+                    e.preventDefault(); 
+                    
+                    AppState.contextMsgId = m.id;
+                    AppState.contextRawText = div.dataset.rawText || text;
+
+                    // Position and show menu
+                    DOM.ctxMenu.style.left = `${e.clientX}px`;
+                    DOM.ctxMenu.style.top = `${e.clientY}px`;
+                    DOM.ctxMenu.classList.remove('hidden');
+                });
                 
                 DOM.scroller.appendChild(div);
                 if(m.votes) this.updateTDVotes(m.id, m.votes);
@@ -667,7 +762,7 @@ const getUserColor = (name) => {
         };
 
         // ==========================================
-        // 5. MEDIA & SYNC ENGINE (YT + WebRTC)
+        // 5. MEDIA & SYNC ENGINE
         // ==========================================
         const MediaEngine = {
             init() {
@@ -752,9 +847,7 @@ const getUserColor = (name) => {
                         if(Math.abs(currTime - data.time) > 2) {
                             AppState.ytPlayer.seekTo(data.time, true);
                         }
-                    } catch (err) {
-                        console.warn("YT Sync wait", err);
-                    }
+                    } catch (err) {}
                 }
             },
 
@@ -835,7 +928,6 @@ const getUserColor = (name) => {
                 
                 document.getElementById('auth-gate').style.opacity = '0';
                 
-                // Request Notification Permission on Entry
                 if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
                     Notification.requestPermission();
                 }
@@ -850,7 +942,7 @@ const getUserColor = (name) => {
                     UI.toast(`Welcome to the sanctuary, ${u}.`);
                 }, 500);
 
-            } catch(e) { UI.toast("Failed to unlock sanctuary. Check console."); console.error(e); }
+            } catch(e) { UI.toast("Failed to unlock sanctuary."); }
         }
 
         // Global Bindings
@@ -859,6 +951,35 @@ const getUserColor = (name) => {
         DOM.sendBtn.onclick = () => ChatEngine.send();
         DOM.input.onkeydown = (e) => {
             if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ChatEngine.send(); }
+        };
+
+        // Custom Right Click Bindings
+        document.addEventListener('click', (e) => {
+            // Hide the menu if we click anywhere else
+            if (!e.target.closest('#context-menu')) {
+                DOM.ctxMenu.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('ctx-edit').onclick = () => {
+            DOM.ctxMenu.classList.add('hidden');
+            if(AppState.contextMsgId) {
+                AppState.editingMsgId = AppState.contextMsgId;
+                DOM.input.value = AppState.contextRawText;
+                UI.autoResizeInput();
+                DOM.input.focus();
+                UI.toast("Editing...");
+            }
+        };
+
+        document.getElementById('ctx-delete').onclick = () => {
+            DOM.ctxMenu.classList.add('hidden');
+            if(AppState.contextMsgId) {
+                if(confirm("Erase this echo permanently?")) {
+                    remove(ref(db, `rooms/${AppState.room}/msgs/${AppState.contextMsgId}`));
+                    UI.toast("Echo erased.");
+                }
+            }
         };
 
         // Menu Bindings
@@ -894,7 +1015,6 @@ const getUserColor = (name) => {
             location.reload();
         };
 
-        // Global functions for inline HTML calls (Truth or Dare)
         window.castTD = (msgId, choice) => {
             set(ref(db, `rooms/${AppState.room}/msgs/${msgId}/votes/${AppState.user}`), choice);
         };
@@ -927,7 +1047,6 @@ const getUserColor = (name) => {
         };
         initEnv();
         
-        // Expose YT API hook
         window.onYouTubeIframeAPIReady = () => { AppState.ytReady = true; };
     </script>
 </body>
