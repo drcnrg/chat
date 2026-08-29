@@ -576,9 +576,9 @@
             init() {
                 setInterval(() => {
                     if (AppState.room && AppState.user) {
-                        this.addPoints(AppState.user, 50, 'passive');
+                        this.addPoints(AppState.user, 10, 'passive');
                     }
-                }, 60000);
+                }, 600000);
             },
             
             async addPoints(user, amount, reason = '', target = '') {
